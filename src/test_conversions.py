@@ -73,3 +73,189 @@ class TestConversions(unittest.TestCase):
             ],
             nodes
         )
+
+    def test_markdown_to_blocks(self):
+        md = """
+This is **bolded** paragraph
+
+This is another paragraph with _italic_ text and `code` here
+This is the same paragraph on a new line
+
+- This is a list
+- with items
+"""
+        blocks = markdown_to_blocks(md)
+        
+        self.assertEqual(
+            blocks,
+            [
+                "This is **bolded** paragraph",
+                "This is another paragraph with _italic_ text and `code` here\nThis is the same paragraph on a new line",
+                "- This is a list\n- with items",
+            ],
+        )
+    
+    def test_block_to_block_type_with_heading(self):
+        md = """# This is a heading"""
+        block_type = block_to_block_type(md)
+        self.assertEqual(block_type, BlockType.HEADING)
+    
+    def test_block_to_block_type_with_invalid_heading(self):
+        md = """####### This is an invalid heading"""
+        block_type = block_to_block_type(md)
+        self.assertEqual(block_type, BlockType.PARAGRAPH)
+    
+    def test_block_to_block_type_with_code(self):
+        md = """``` This is a code block ```"""
+        block_type = block_to_block_type(md)
+        self.assertEqual(block_type, BlockType.CODE)
+    
+    def test_block_to_block_type_with_invalid_code(self):
+        md = """``` This is an invalid code block"""
+        block_type = block_to_block_type(md)
+        self.assertEqual(block_type, BlockType.PARAGRAPH)
+    
+    def test_block_to_block_type_with_quote(self):
+        md = """>This is a quote block
+>with a second line
+>and a third line"""
+        block_type = block_to_block_type(md)
+        self.assertEqual(block_type, BlockType.QUOTE)
+    
+    def test_block_to_block_type_with_invalid_quote(self):
+        md = """>This is a quote block
+>with a second line
+and a third line"""
+        block_type = block_to_block_type(md)
+        self.assertEqual(block_type, BlockType.PARAGRAPH)
+    
+    def test_block_to_block_type_with_unordered_list(self):
+        md = """- This is an unordered list
+- with a second item
+- and a third item"""
+        block_type = block_to_block_type(md)
+        self.assertEqual(block_type, BlockType.UNORDERED_LIST)
+    
+    def test_block_to_block_type_with_invalid_unordered_list(self):
+        md = """- This is an unordered list
+- with a second item
+-and a third item"""
+        block_type = block_to_block_type(md)
+        self.assertEqual(block_type, BlockType.PARAGRAPH)
+    
+    def test_block_to_block_type_with_ordered_list(self):
+        md = """1. This is an ordered list
+2. with a second item
+3. and a third item"""
+        block_type = block_to_block_type(md)
+        self.assertEqual(block_type, BlockType.ORDERED_LIST)
+    
+    def test_block_to_block_type_with_invalid_ordered_list(self):
+        md = """1. This is an ordered list
+2. with a second item
+3.and a third item"""
+        block_type = block_to_block_type(md)
+        self.assertEqual(block_type, BlockType.PARAGRAPH)
+    
+    def test_block_to_block_type_with_out_of_order_list(self):
+        md = """1. This is an ordered list
+2. with a second item
+4. and a third item"""
+        block_type = block_to_block_type(md)
+        self.assertEqual(block_type, BlockType.PARAGRAPH)
+
+    def test_paragraphs(self):
+        md = """
+This is **bolded** paragraph
+text in a p
+tag here
+
+This is another paragraph with _italic_ text and `code` here
+
+"""
+
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><p>This is <b>bolded</b> paragraph text in a p tag here</p><p>This is another paragraph with <i>italic</i> text and <code>code</code> here</p></div>",
+        )
+
+    def test_headings(self):
+        md = """
+# Heading 1
+
+## Heading 2
+
+### Heading 3
+
+#### Heading 4
+
+##### Heading 5
+
+###### Heading 6
+"""
+
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><h1>Heading 1</h1><h2>Heading 2</h2><h3>Heading 3</h3><h4>Heading 4</h4><h5>Heading 5</h5><h6>Heading 6</h6></div>",
+        )
+
+    def test_codeblock(self):
+        md = """
+```
+This is text that _should_ remain
+the **same** even with inline stuff
+```
+"""
+
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><pre><code>This is text that _should_ remain\nthe **same** even with inline stuff\n</code></pre></div>",
+        )
+
+    def test_quoteblock(self):
+        md = """
+>This is a quote block
+>with a **bolded** word
+>and a word in _italics_.
+"""
+
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><blockquote>This is a quote block with a <b>bolded</b> word and a word in <i>italics</i>.</blockquote></div>",
+        )
+
+    def test_unordered_lists(self):
+        md = """
+- This is the first item in an unordered list.
+- This is the second item.
+- This is the third item.
+"""
+
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><ul><li>This is the first item in an unordered list.</li><li>This is the second item.</li><li>This is the third item.</li></ul></div>",
+        )
+
+    def test_ordered_lists(self):
+        md = """
+1. This is the first item in an ordered list.
+2. This is the second item.
+3. This is the third item.
+"""
+
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><ol><li>This is the first item in an ordered list.</li><li>This is the second item.</li><li>This is the third item.</li></ol></div>",
+        )
