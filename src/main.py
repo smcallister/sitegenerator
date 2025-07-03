@@ -1,5 +1,6 @@
 import os
 import shutil
+import sys
 
 from conversions import markdown_to_html_node
 from nodefunctions import extract_title
@@ -26,7 +27,7 @@ def copy_directory(source, dest):
         else:
             copy_directory(source_file, dest_file)
 
-def generate_page(source_path, template_path, dest_path):
+def generate_page(source_path, template_path, dest_path, base_path):
     # Read the source markdown and template.
     print(f"Generating page from {source_path} to {dest_path} using {template_path}")
     with open(source_path) as source_file:
@@ -38,7 +39,7 @@ def generate_page(source_path, template_path, dest_path):
     # Convert the markdown into HTML and write it into the template.
     html_node = markdown_to_html_node(source_contents)
     title = extract_title(source_contents)
-    content = template_contents.replace("{{ Title }}", title).replace("{{ Content }}", html_node.to_html())
+    content = template_contents.replace('{{ Title }}', title).replace('{{ Content }}', html_node.to_html()).replace('href="/', f'href="{base_path}').replace('src="/', f'src="{base_path}')
 
     # Write the template to a file.
     if not os.path.exists(os.path.dirname(dest_path)):
@@ -47,7 +48,7 @@ def generate_page(source_path, template_path, dest_path):
     with open(dest_path, "w") as dest_file:
         dest_file.write(content)
 
-def generate_pages(source_path, template_path, dest_path):
+def generate_pages(source_path, template_path, dest_path, base_path):
     # Enumerate all files in the source directory.
     files = os.listdir(source_path)
     for file in files:
@@ -57,19 +58,27 @@ def generate_pages(source_path, template_path, dest_path):
 
         # If this item is a file, generate HTML from it
         if os.path.isfile(source_file):
-            generate_page(source_file, template_path, dest_file)
+            generate_page(source_file, template_path, dest_file, base_path)
         
         # Otherwise, generate pages in the subdirectory.
         else:
-            generate_pages(source_file, template_path, dest_file)
+            generate_pages(source_file, template_path, dest_file, base_path)
 
 def main():
-    # Set up the public directory.
-    shutil.rmtree("public")
-    copy_directory("static", "public")
+    # Parse command line arguments.
+    if len(sys.argv) > 1:
+        base_path = sys.argv[1]
+    else:
+        base_path = "/"
+
+    # Set up the docs directory.
+    if os.path.exists("docs"):
+        shutil.rmtree("docs")
+    
+    copy_directory("static", "docs")
 
     # Generate pages.
-    generate_pages("content", "template.html", "public")
+    generate_pages("content", "template.html", "docs", base_path)
 
 if __name__ == "__main__":
     main()
