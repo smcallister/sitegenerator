@@ -45,7 +45,7 @@ class TestConversions(unittest.TestCase):
         node = TextNode("This is an image node", TextType.IMAGE, "http://localhost/hello.gif")
         html_node = text_node_to_html_node(node)
         self.assertEqual(html_node.tag, "img")
-        self.assertEqual(html_node.value, None)
+        self.assertEqual(html_node.value, "")
         self.assertIn("src", html_node.props)
         self.assertEqual(html_node.props["src"], "http://localhost/hello.gif")
         self.assertIn("alt", html_node.props)
@@ -116,15 +116,16 @@ This is the same paragraph on a new line
         self.assertEqual(block_type, BlockType.PARAGRAPH)
     
     def test_block_to_block_type_with_quote(self):
-        md = """>This is a quote block
->with a second line
->and a third line"""
+        md = """> This is a quote block
+> with a second line
+>
+> and a third line"""
         block_type = block_to_block_type(md)
         self.assertEqual(block_type, BlockType.QUOTE)
     
     def test_block_to_block_type_with_invalid_quote(self):
-        md = """>This is a quote block
->with a second line
+        md = """> This is a quote block
+> with a second line
 and a third line"""
         block_type = block_to_block_type(md)
         self.assertEqual(block_type, BlockType.PARAGRAPH)
@@ -220,9 +221,9 @@ the **same** even with inline stuff
 
     def test_quoteblock(self):
         md = """
->This is a quote block
->with a **bolded** word
->and a word in _italics_.
+> This is a quote block
+> with a **bolded** word
+> and a word in _italics_.
 """
 
         node = markdown_to_html_node(md)

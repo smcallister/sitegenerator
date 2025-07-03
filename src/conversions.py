@@ -40,7 +40,7 @@ def text_node_to_html_node(text_node):
 
             return LeafNode(
                 "img",
-                None,
+                "",
                 {
                     "src": text_node.url,
                     "alt": text_node.text
@@ -126,7 +126,7 @@ def block_to_html_node(markdown):
             return ParentNode("pre", [code_node])
 
         case BlockType.QUOTE:
-            return ParentNode("blockquote", text_to_htmlnodes(markdown.replace(">", "").replace("\n", " ")))
+            return ParentNode("blockquote", text_to_htmlnodes(markdown.replace("> ", "").replace(">", "").replace("\n", " ")))
 
         case BlockType.UNORDERED_LIST:
             children = []

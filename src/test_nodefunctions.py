@@ -125,6 +125,13 @@ class TestNodeFunctions(unittest.TestCase):
 
         self.assertListEqual([("to boot dev", "https://www.boot.dev"), ("to youtube", "https://www.youtube.com/@bootdotdev")], matches)
 
+    def test_extract_title(self):
+        title = extract_title("# This is the title")
+        self.assertEqual(title, "This is the title")
+
+    def test_extract_missing_title(self):
+        self.assertRaises(Exception, extract_title, "This is the title")
+
     def test_split_single_image(self):
         node = TextNode(
             "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png)",
